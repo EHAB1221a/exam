@@ -1,0 +1,414 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>امتحان — الاقتصاد السياسي (الباب الأول)</title>
+  <style>
+    :root{--bg:#f7fafc;--card:#fff;--accent:#0f172a;--muted:#6b7280}
+    body{font-family:Arial, "Segoe UI", Roboto, sans-serif;background:var(--bg);color:var(--accent);margin:0;padding:20px}
+    .container{max-width:900px;margin:20px auto}
+    header{background:linear-gradient(90deg,#07203c,#0b4a6f);color:#fff;padding:18px;border-radius:12px}
+    header h1{margin:0 0 6px;font-size:20px}
+    header p{margin:0;opacity:.9}
+    .card{background:var(--card);border-radius:10px;padding:18px;margin-top:18px;box-shadow:0 6px 18px rgba(2,6,23,.06)}
+    label{display:block;margin-bottom:6px}
+    .qnum{font-weight:700;margin-bottom:8px}
+    .options{margin-top:8px}
+    .opt{display:block;padding:10px;border-radius:8px;border:1px solid #e6eef6;margin:8px 0;cursor:pointer}
+    .opt input{margin-left:8px}
+    .controls{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
+    button{background:#0b78be;color:#fff;border:0;padding:10px 14px;border-radius:8px;cursor:pointer}
+    button.ghost{background:transparent;color:var(--accent);border:1px solid #e2e8f0}
+    .timers{display:flex;gap:12px;align-items:center}
+    .timer{background:#eef2ff;padding:8px 12px;border-radius:8px;font-weight:700}
+    .result-correct{color:green;font-weight:700;margin-top:10px}
+    .result-wrong{color:#c53030;font-weight:700;margin-top:10px}
+    footer{margin-top:18px;text-align:center;color:var(--muted)}
+    .small{font-size:13px;color:var(--muted)}
+    .answer-key{margin-top:12px;background:#fff;padding:12px;border-radius:8px;border:1px solid #eef2ff}
+    pre{white-space:pre-wrap;font-family:inherit}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>امتحان علي الباب الاول الاقتصاد السياسي (هوبا الدرديري⭐)</h1>
+      <p>عدد الأسئلة: 30 — كل سؤال صفحة واحدة — دقيقة واحدة لكل سؤال — النتيجة النهائية تظهر بعد التسليم</p>
+    </header>
+
+    <div class="card" id="intro">
+      <h3> اكتب اسمڪ</h3>
+      <input id="candidateName" placeholder="اسم المتسابق" style="width:100%;padding:10px;border-radius:8px;border:1px solid #e6eef6" />
+      <p class="small">المؤقت: دقيقة واحدة لكل سؤال (ساعة واحدة لكل مجموعة)، والمؤقت الكلي 30:00 دقيقة. سيتم الانتقال آليًا إذا انتهت مدة السؤال.</p>
+      <div style="margin-top:12px;display:flex;gap:10px">
+        <button id="startBtn">ابدأ الامتحان</button>
+        <button class="ghost" id="printBtn">طباعة الصفحة</button>
+      </div>
+    </div>
+
+    <div class="card" id="exam" style="display:none">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
+        <div>
+          <div class="small">المتسابق: <span id="nameDisplay"></span></div>
+          <div class="small">السؤال: <span id="qIndex"></span> / 30</div>
+        </div>
+        <div class="timers">
+          <div class="timer">الزمن المتبقي للسؤال: <span id="qTimer">01:00</span></div>
+          <div class="timer">الوقت الكلي المتبقي: <span id="totalTimer">30:00</span></div>
+        </div>
+      </div>
+
+      <hr style="margin:12px 0">
+
+      <div id="questionArea">
+        <!-- السؤال يظهر هنا -->
+      </div>
+
+      <div class="controls">
+        <button id="prevBtn" class="ghost">السابق</button>
+        <button id="nextBtn">التالي</button>
+        <button id="submitBtn" style="margin-left:auto;background:#16a34a">تسليم وإنهاء</button>
+      </div>
+
+      <div id="feedback" style="margin-top:12px"></div>
+    </div>
+
+    <div class="card" id="result" style="display:none">
+      <h3>النتيجة النهائية</h3>
+      <p id="scoreText" style="font-size:18px;font-weight:700"></p>
+      <div id="finalBreakdown"></div>
+      <div style="margin-top:12px">
+        <button id="restartBtn">إعادة الامتحان بنفس الاسم</button>
+        <button id="downloadBtn" class="ghost">تحميل ورقة النتائج (نسخة نصية)</button>
+      </div>
+    </div>
+
+    <footer>
+      <p class="small">ملاحظة: عند الإجابة يجرى التصحيح فورًا. إن كانت إجابتك خاطئة سيظهر التصحيح الصحيح (بدون شرح) أسفل كل سؤال. عند انتهاء الزمن الكلي تُسلم الإجابات كما هي وتعرض النتيجة.</p>
+    </footer>
+  </div>
+
+<script>
+const questions = [
+  {type:'mcq', q:'ما هو النقد الأبرز الذي وجه للتعريف الذي اعتبر الاقتصاد "علم الثروة / الرفاهية المادية"؟', opts:['أ. لم يركز على المصلحة الشخصية.','ب. لم يأخذ في الاعتبار الندرة.','ج. ضيق المجال لأنه ركز على الأشياء المادية واستبعد الخدمات.','د. لم يتطرق لدور الدولة في النشاط الاقتصادي.'], ans:2},
+  {type:'mcq', q:'التعريف الذي اعتمدته المدرسة المعاصرة (روبنز وكاسل) وعرفت الاقتصاد بأنه "علم الندرة والاختيار" يندرج تحت أي تصنيف للتعريفات؟', opts:['أ. تعريفه حسب الغايات (الهدف).','ب. تعريفه حسب الوسائل (الطريقة).','ج. تعريفه حسب العلاقة بين الوسائل والغايات.','د. تعريفه حسب المصلحة الشخصية.'], ans:1},
+  {type:'mcq', q:'أي من المفاهيم التالية يعتبر التعريف الأشمل والأدق لعلم الاقتصاد من منظور الغايات؟', opts:['أ. علم الثروة.','ب. علم المبادلة.','ج. علم المصلحة الشخصية.','د. علم إشباع الحاجات.'], ans:3},
+  {type:'mcq', q:'ظهر مصطلح "الاقتصاد السياسي" أول مرة بشكل رسمي على يد الفرنسي مونكريستيان في عام:', opts:['أ. 1776.','ب. 1615.','ج. 1848.','د. 1515.'], ans:1},
+  {type:'mcq', q:'من أبرز الأمثلة التي ذكرها النص للقوانين الاقتصادية والتي ركزت على مبدأ "التخصص وزيادة الإنتاج وتقليل التكلفة":', opts:['أ. قانون العرض والطلب.','ب. قانون القيمة عند الكلاسيك.','ج. قانون تقسيم العمل عند آدم سميث.','د. قانون المنفعة الحدية المتناقصة.'], ans:2},
+  {type:'mcq', q:'أي من المدارس التالية ترى أن القوانين الاقتصادية ليست عامة وثابتة، بل هي نسبية وتختلف حسب ظروف وتاريخ كل بلد؟', opts:['أ. الفيزيوكرات (الطبيعيون).','ب. المدرسة الكلاسيكية.','ج. المدرسة التاريخية.','د. مدرسة كينـز.'], ans:2},
+  {type:'mcq', q:'حسب المدرسة الكلاسيكية (آدم سميث وريكاردو)، ما هو العنصر الأساسي الذي يخلق قيمة السلعة؟', opts:['أ. الأرض.','ب. رأس المال.','ج. كمية العمل المبذول لإنتاجها.','د. الندرة النسبية للسلعة.'], ans:2},
+  {type:'mcq', q:'قوانين الاقتصاد حسب رأي "كينـز" هي:', opts:['أ. قوانين طبيعية ثابتة.','ب. قوانين تطور تاريخي.','ج. لا توجد قوانين طبيعية ثابتة ولا قوانين تطور، بل سياسات متغيرة.','د. قوانين المصلحة الشخصية.'], ans:2},
+  {type:'mcq', q:'من هم أول من اهتم بالاقتصاد واعتبروه جزءًا من الفلسفة والأخلاق؟', opts:['أ. الرومان.','ب. الفيزيوكرات.','ج. اليونان.','د. التجاريون.'], ans:2},
+  {type:'mcq', q:'أي من المدارس الاقتصادية التالية اشتهرت بشعار "دعه يعمل… دعه يمر" (Laissez-faire, Laissez-passer)؟', opts:['أ. التجاريون (المركنتيلية).','ب. الطبيعيون (الفيزيوكرات).','ج. الكلاسيكية.','د. النيوكلاسيكية.'], ans:1},
+  {type:'mcq', q:'ما هو الهدف الرئيسي الذي سعى إليه "التجاريون (المركنتيلية)" في سياستهم الاقتصادية؟', opts:['أ. تحقيق العدالة الاجتماعية وتوزيع الثروة.','ب. جمع الذهب والفضة عن طريق تشجيع الصادرات ومنع الاستيراد.','ج. التركيز على الزراعة باعتبارها المصدر الوحيد للثروة.','د. فصل الاقتصاد عن السياسة.'], ans:1},
+  {type:'mcq', q:'في فترة العصور الوسطى، ما هي النظرية التي فرضتها الكنيسة لتنظيم الأسعار؟', opts:['أ. نظرية اليد الخفية.','ب. نظرية الثمن العادل.','ج. نظرية القيمة (العمل).','د. نظرية الندرة النسبية.'], ans:1},
+  {type:'mcq', q:'من هو المفكر الذي دافع عن الملكية الفردية ورفض الربا في العصور القديمة؟', opts:['أ. أفلاطون.','ب. سقراط.','ج. أرسطو.','د. مونكريستيان.'], ans:2},
+  {type:'mcq', q:'من هو المفكر الذي عارض التجارة الحرة، مؤيدًا حماية الصناعة الوطنية، وينتمي للمدرسة التاريخية؟', opts:['أ. آدم سميث.','ب. ريكاردو.','ج. الفريد مارشال.','د. فردريك ليست.'], ans:3},
+  {type:'mcq', q:'من هو "أبو" المدرسة الكلاسيكية ومؤلف كتاب "ثروة الأمم"؟', opts:['أ. ديفيد ريكاردو.','ب. جون ستيورات مل.','ج. آدم سميث.','د. جان بابتست ساي.'], ans:2},
+  {type:'mcq', q:'المدرسة النيوكلاسيكية قامت بدمج تحليل العرض والطلب وركزت على تحليل الزمن (قصير وطويل الأجل)، وكان أبرز ممثليها:', opts:['أ. جون ماينارد كينـز.','ب. الفريد مارشال.','ج. كارل ماركس.','د. روبنز.'], ans:1},
+  {type:'mcq', q:'العلاقة بين الاقتصاد والقانون تتمثل في أن:', opts:['أ. القانون ينظم المعاملات الاقتصادية، والاقتصاد يحدد قواعد السوق.','ب. الاقتصاد يضع السياسات العامة، والقانون يحللها.','ج. القانون يحمي الموارد الطبيعية، والاقتصاد يستغلها.','د. الاقتصاد يدرس رغبات الأفراد، والقانون يمنع استغلالها.'], ans:0},
+  {type:'mcq', q:'عندما يدرس الاقتصاديون كيفية استغلال الموارد الطبيعية ومواقع الإنتاج، فإنهم بذلك يرتبطون ارتباطاً وثيقاً بعلم:', opts:['أ. علم الإدارة.','ب. علم الاجتماع.','ج. الجغرافيا.','د. التاريخ.'], ans:2},
+  {type:'mcq', q:'علم المحاسبة يعتبر أداة لتطبيق الاقتصاد لأنه:', opts:['أ. يحدد القوانين الاقتصادية الثابتة.','ب. يسجل ويحلل النشاط المالي الذي يستخدمه الاقتصاد لاتخاذ القرارات.','ج. يدرس تطور النظم الاقتصادية عبر الزمن.','د. يركز على المصلحة الشخصية للأفراد.'], ans:1},
+  {type:'mcq', q:'أي من الكلمات التالية لم ترد في التعريف النهائي والمهم لعلم الاقتصاد السياسي كهدف رئيسي؟', opts:['أ. الحاجات المتعددة.','ب. الموارد المحدودة.','ج. تنمية الموارد.','د. القوانين الطبيعية الثابتة.'], ans:3},
+
+  // صح أو خطأ: use type 'tf' and ans: true/false
+  {type:'tf', q:'أصل كلمة "اقتصاد" يوناني، وتعني "إدارة شؤون البيت" (Oikos = المنزل، Nomos = قواعد).', ans:true},
+  {type:'tf', q:'النقد الموجه لتعريف الاقتصاد حسب "علم المبادلة" هو أنه يهمل السلوك الفردي فقط ولا يشمل أنشطة اقتصادية بدون مبادلة مثل الأسرة.', ans:false},
+  {type:'tf', q:'وفقاً للمدرسة الفيزيوكرات (الطبيعيون) في فرنسا، أي تدخل حكومي في الاقتصاد سينجح لأنه يتبع القوانين الطبيعية.', ans:false},
+  {type:'tf', q:'الإسلام أقرّ الملكية الفردية ونظام الميراث وشجع التجارة والزراعة، محارباً الاستغلال.', ans:true},
+  {type:'tf', q:'المدرسة التاريخية ترى أن قوانين الاقتصاد ثابتة لا تتغير بتغير الزمان والمكان.', ans:false},
+  {type:'tf', q:'المدرسة الكلاسيكية (آدم سميث) رأت أن "اليد الخفية" هي التي تدير السوق، وأن كل العمال يساهمون في الإنتاج.', ans:true},
+  {type:'tf', q:'من أبرز أفكار التجاريين (المركنتيلية) أنها دعت إلى الحرية الاقتصادية الكاملة وعدم تدخل الدولة.', ans:false},
+  {type:'tf', q:'أحد أهم أوجه العلاقة بين الاقتصاد وعلم الإدارة هو أن الاقتصاد يخطط (يرسم السياسات) بينما الإدارة تنفذ داخل الشركات.', ans:true},
+  {type:'tf', q:'في العصور القديمة، اعتبر الرومان الفائدة (الربا) أنها "سفك دماء" وحبوا الزراعة جدًا.', ans:false},
+  {type:'tf', q:'القانون الاقتصادي هو علاقة ثابتة ومتكررة بين ظواهر اقتصادية، لكنها لا تهدف لتفسير حركة التوزيع والتبادل داخل المجتمع، بل الإنتاج فقط.', ans:false}
+];
+
+let state = {
+  name:'',
+  index:0,
+  answers:Array(questions.length).fill(null),
+  correct:Array(questions.length).fill(false),
+  qSeconds:60,
+  totalSeconds:30*60,
+  qTimerId:null,
+  totalTimerId:null,
+};
+
+const intro = document.getElementById('intro');
+const exam = document.getElementById('exam');
+const result = document.getElementById('result');
+const nameDisplay = document.getElementById('nameDisplay');
+const qIndex = document.getElementById('qIndex');
+const qTimer = document.getElementById('qTimer');
+const totalTimer = document.getElementById('totalTimer');
+const questionArea = document.getElementById('questionArea');
+const feedback = document.getElementById('feedback');
+function sendResultToSheet() {
+  const url = "https://script.google.com/macros/s/AKfycbz6jn9PTuAOA5cdN6yvl6TjY2V5qUsZm4YoaMGTsTCNWeFBpWSxegIoyH52IrkTLJ3k/exec";
+  
+  const data = {
+    name: state.name,
+    score: state.correct.filter(x => x).length,
+    total: questions.length,
+    answers: state.answers.map((a,i)=> ({
+      question: questions[i].q,
+      given: a===null ? null : (questions[i].type==='mcq' ? questions[i].opts[a] : (a?'صح':'خطأ')),
+      correct: questions[i].type==='mcq' ? questions[i].opts[questions[i].ans] : (questions[i].ans?'صح':'خطأ')
+    }))
+  };
+  
+  fetch(url, {
+    method: "POST",
+    body: JSON.stringify(data),
+    headers: {"Content-Type": "application/json"}
+  })
+  .then(res => console.log("تم إرسال النتيجة بنجاح"))
+  .catch(err => console.error("خطأ في إرسال النتيجة:", err));
+}
+function formatTime(s){
+  const mm = String(Math.floor(s/60)).padStart(2,'0');
+  const ss = String(s%60).padStart(2,'0');
+  return mm+':'+ss;
+}
+
+function renderQuestion(){
+  const i = state.index;
+  const item = questions[i];
+  qIndex.textContent = (i+1);
+  feedback.innerHTML = '';
+  let html = `<div class="qnum">السؤال ${i+1}</div>`;
+  html += `<div><strong>${item.q}</strong></div>`;
+  html += '<div class="options">';
+  if(item.type==='mcq'){
+    item.opts.forEach((o,idx)=>{
+      const checked = state.answers[i]===idx ? 'checked' : '';
+      html += `<label class="opt"><input type="radio" name="opt" value="${idx}" ${checked}> ${o}</label>`;
+    });
+  } else {
+    // true/false toggle
+    const val = state.answers[i];
+    html += `<label class="opt"><input type="radio" name="opt" value="true" ${val===true? 'checked':''}> صح</label>`;
+    html += `<label class="opt"><input type="radio" name="opt" value="false" ${val===false? 'checked':''}> خطأ</label>`;
+  }
+  html += '</div>';
+  questionArea.innerHTML = html;
+
+  // show previous correctness if already answered
+  if(state.answers[i]!==null){
+    const correct = checkAnswer(i, state.answers[i]);
+    showFeedback(correct, i);
+  }
+}
+
+function startTimers(){
+  // clear existing
+  if(state.qTimerId) clearInterval(state.qTimerId);
+  if(state.totalTimerId) clearInterval(state.totalTimerId);
+  state.qSeconds = 60;
+  qTimer.textContent = formatTime(state.qSeconds);
+  state.qTimerId = setInterval(()=>{
+    state.qSeconds--;
+    qTimer.textContent = formatTime(state.qSeconds);
+    if(state.qSeconds<=0){
+      clearInterval(state.qTimerId);
+      // auto move next (record as unanswered/null)
+      autoAdvance();
+    }
+  },1000);
+
+  state.totalTimerId = setInterval(()=>{
+    state.totalSeconds--;
+    totalTimer.textContent = formatTime(state.totalSeconds);
+    if(state.totalSeconds<=0){
+      clearInterval(state.totalTimerId);
+      // time's up -> submit
+      submitExam();
+    }
+  },1000);
+}
+
+function resetQuestionTimer(){
+  if(state.qTimerId) clearInterval(state.qTimerId);
+  state.qSeconds = 60;
+  qTimer.textContent = formatTime(state.qSeconds);
+  state.qTimerId = setInterval(()=>{
+    state.qSeconds--;
+    qTimer.textContent = formatTime(state.qSeconds);
+    if(state.qSeconds<=0){
+      clearInterval(state.qTimerId);
+      autoAdvance();
+    }
+  },1000);
+}
+
+function autoAdvance(){
+  // evaluate current if any selection
+  evaluateCurrent();
+  // move to next or submit if last
+  if(state.index < questions.length-1){
+    state.index++;
+    renderQuestion();
+    resetQuestionTimer();
+  } else {
+    submitExam();
+  }
+}
+
+function evaluateCurrent(){
+  const i = state.index;
+  const inputs = document.getElementsByName('opt');
+  let val = null;
+  for(const inp of inputs){
+    if(inp.checked){
+      val = inp.value;
+      break;
+    }
+  }
+  if(val===null) return; // nothing selected
+  if(questions[i].type==='mcq') val = parseInt(val,10);
+  else val = (val==='true');
+  state.answers[i] = val;
+  const correct = checkAnswer(i,val);
+  state.correct[i] = correct;
+  showFeedback(correct,i);
+}
+
+function checkAnswer(i,val){
+  const item = questions[i];
+  if(item.type==='mcq') return val === item.ans;
+  return val === item.ans;
+}
+
+function showFeedback(correct,i){
+  if(correct){
+    feedback.innerHTML = '<div class="result-correct">إجابة صحيحة ✔️</div>';
+  } else {
+    let correctText = '';
+    const item = questions[i];
+    if(item.type==='mcq') correctText = item.opts[item.ans];
+    else correctText = item.ans ? 'صح' : 'خطأ';
+    feedback.innerHTML = `<div class="result-wrong">خطأ ✖️ — الإجابة الصحيحة: <strong>${correctText}</strong></div>`;
+  }
+}
+
+// controls
+document.getElementById('startBtn').addEventListener('click',()=>{
+  const name = document.getElementById('candidateName').value.trim();
+  if(!name){
+    alert('من فضلك اكتب اسم المتسابق قبل البدء.');
+    return;
+  }
+  state.name = name;
+  nameDisplay.textContent = state.name;
+  intro.style.display='none';
+  exam.style.display='block';
+  renderQuestion();
+  startTimers();
+});
+
+document.getElementById('printBtn').addEventListener('click',()=> window.print());
+
+document.getElementById('nextBtn').addEventListener('click',()=>{
+  evaluateCurrent();
+  if(state.index < questions.length-1){
+    state.index++;
+    renderQuestion();
+    resetQuestionTimer();
+  } else {
+    submitExam();
+  }
+});
+
+document.getElementById('prevBtn').addEventListener('click',()=>{
+  if(state.index>0){
+    state.index--;
+    renderQuestion();
+    resetQuestionTimer();
+  }
+});
+
+document.getElementById('submitBtn').addEventListener('click',()=>{
+  if(!confirm('هل أنت متأكد من تسليم الامتحان الآن؟ لا يمكنك التراجع.')) return;
+  submitExam();
+});
+
+document.getElementById('restartBtn').addEventListener('click',()=>{
+  // reset but keep name
+  state.index = 0;
+  state.answers = Array(questions.length).fill(null);
+  state.correct = Array(questions.length).fill(false);
+  state.totalSeconds = 30*60;
+  result.style.display='none';
+  exam.style.display='block';
+  nameDisplay.textContent = state.name;
+  renderQuestion();
+  startTimers();
+});
+
+document.getElementById('downloadBtn').addEventListener('click',()=>{
+  const txt = generateResultText();
+  const blob = new Blob([txt], {type:'text/plain;charset=utf-8'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = url; a.download = 'result.txt'; a.click(); URL.revokeObjectURL(url);
+});
+
+function submitExam(){
+  // stop timers
+  if(state.qTimerId) clearInterval(state.qTimerId);
+  if(state.totalTimerId) clearInterval(state.totalTimerId);
+  // evaluate current screen selection
+  const inputs = document.getElementsByName('opt');
+  if(inputs.length>0){
+    let val = null;
+    for(const inp of inputs) if(inp.checked) { val = inp.value; break; }
+    if(val!==null){
+      const i = state.index;
+      if(questions[i].type==='mcq') val = parseInt(val,10);
+      else val = (val==='true');
+      state.answers[i]=val;
+      state.correct[i]=checkAnswer(i,val);
+    }
+  }
+
+  // compute score
+  const totalCorrect = state.correct.filter(x=>x).length;
+  const score = totalCorrect; // 1 point per question
+  // show result
+  exam.style.display='none';
+  result.style.display='block';
+  document.getElementById('scoreText').textContent = `${score} / ${questions.length} نقاط`;
+  // breakdown
+  const fb = document.getElementById('finalBreakdown');
+  let html = '<div class="answer-key"><strong>تفصيل الإجابات (الإجابات الصحيحة):</strong><pre>';
+  questions.forEach((it,idx)=>{
+    let correct = it.type==='mcq' ? it.opts[it.ans] : (it.ans ? 'صح' : 'خطأ');
+    let given = state.answers[idx]===null ? 'لم يُجب' : (it.type==='mcq' ? it.opts[state.answers[idx]] : (state.answers[idx] ? 'صح':'خطأ'));
+    let mark = state.correct[idx] ? '✓' : '✖';
+    html += `${idx+1}. ${mark} — إجابتك: ${given} — الصحيح: ${correct}\n`;
+  });
+  html += '</pre></div>';
+  fb.innerHTML = html;
+}
+
+function generateResultText(){
+  let txt = `الاسم: ${state.name}\nنتيجة الامتحان:\n`;
+  const score = state.correct.filter(x=>x).length;
+  txt += `${score} / ${questions.length}\n\nتفصيل:\n`;
+  questions.forEach((it,idx)=>{
+    let correct = it.type==='mcq' ? it.opts[it.ans] : (it.ans ? 'صح' : 'خطأ');
+    let given = state.answers[idx]===null ? 'لم يُجب' : (it.type==='mcq' ? it.opts[state.answers[idx]] : (state.answers[idx] ? 'صح':'خطأ'));
+    let mark = state.correct[idx] ? '✓' : '✖';
+    txt += `${idx+1}. ${mark} — إجابتك: ${given} — الصحيح: ${correct}\n`;
+  });
+  return txt;
+}
+
+// initial rendering placeholder
+qTimer.textContent = '01:00';
+totalTimer.textContent = '30:00';
+
+</script>
+</body>
+</html>
